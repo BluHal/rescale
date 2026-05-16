@@ -3,6 +3,7 @@ using Rescale.Services;
 using Rescale.ViewModels;
 using Wpf.Ui;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
 
 namespace Rescale;
 
@@ -14,7 +15,10 @@ public partial class App : Application
     private readonly ResolutionService _resolutionService = new();
     private readonly HdrService _hdrService = new();
     private readonly MonitorIdentifier _monitorIdentifier = new();
+    private readonly HotkeyService _hotkeyService = new();
     private TrayService? _trayService;
+    private PresetService? _presetService;
+    private int? _cycleHotkeyId;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -32,11 +36,11 @@ public partial class App : Application
 
         LogService.Info("App starting");
 
-        var presetService = new PresetService(
+        _presetService = new PresetService(
             _displayService, _resolutionService, _hdrService, _monitorIdentifier, _configService);
 
         var mainVm = new MainViewModel(
-            _configService, presetService, _displayService, _resolutionService, _hdrService);
+            _configService, _presetService, _displayService, _resolutionService, _hdrService);
 
         var config = _configService.Load();
         ApplyTheme(config.Theme);
@@ -44,8 +48,14 @@ public partial class App : Application
         var mainWindow = new MainWindow(mainVm);
         MainWindow = mainWindow;
 
-        _trayService = new TrayService(presetService, _configService, mainWindow);
+        _trayService = new TrayService(_presetService, _configService, mainWindow);
         _trayService.Initialize();
+
+        mainWindow.Loaded += (_, _) =>
+        {
+            _hotkeyService.Initialize(mainWindow);
+            RegisterCycleHotkey(config.CycleHotkey);
+        };
 
         mainWindow.Show();
     }
@@ -57,13 +67,48 @@ public partial class App : Application
         {
             "Dark" => ApplicationTheme.Dark,
             "Light" => ApplicationTheme.Light,
-            _ => ApplicationTheme.Dark,
+            _ => SystemThemeManager.GetCachedSystemTheme() == SystemTheme.Dark
+                ? ApplicationTheme.Dark
+                : ApplicationTheme.Light,
         };
-        ApplicationThemeManager.Apply(appTheme);
+        ApplicationThemeManager.Apply(appTheme, WindowBackdropType.Mica, true);
+    }
+
+    /// <summary>Registers or re-registers the global cycle hotkey.</summary>
+    public void UpdateCycleHotkey(string? hotkey)
+    {
+        RegisterCycleHotkey(hotkey);
+    }
+
+    private void RegisterCycleHotkey(string? hotkey)
+    {
+        if (_cycleHotkeyId.HasValue)
+        {
+            _hotkeyService.Unregister(_cycleHotkeyId.Value);
+            _cycleHotkeyId = null;
+        }
+
+        if (string.IsNullOrEmpty(hotkey) || _presetService == null || _trayService == null)
+            return;
+
+        _cycleHotkeyId = _hotkeyService.Register(hotkey, () =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var (applied, _) = _presetService.CycleNext();
+                if (applied != null)
+                    _trayService.UpdateTray(applied);
+            });
+        });
+
+        LogService.Info(_cycleHotkeyId.HasValue
+            ? $"Cycle hotkey registered: {hotkey}"
+            : $"Failed to register cycle hotkey: {hotkey}");
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _hotkeyService.Dispose();
         _trayService?.Dispose();
         base.OnExit(e);
     }

@@ -1,3 +1,4 @@
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -23,6 +24,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string? _cycleHotkey;
 
+    [ObservableProperty]
+    private bool _isRecordingHotkey;
+
     public SettingsViewModel(AppConfig config, ConfigService configService)
     {
         _config = config;
@@ -36,6 +40,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         _config.Theme = value;
         _configService.Save(_config);
+        ((App)Application.Current).ApplyTheme(value);
     }
 
     partial void OnAutoStartChanged(bool value)
@@ -49,6 +54,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         _config.CycleHotkey = value;
         _configService.Save(_config);
+        ((App)Application.Current).UpdateCycleHotkey(value);
     }
 
     private static void SetRegistryAutoStart(bool enabled)

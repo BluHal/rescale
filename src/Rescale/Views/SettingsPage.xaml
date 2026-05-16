@@ -63,9 +63,13 @@
 
                 <DockPanel Margin="16,14">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                        <ui:TextBox Text="{Binding CycleHotkey, TargetNullValue='Not set'}"
+                        <ui:TextBox x:Name="HotkeyTextBox"
+                                    Text="{Binding CycleHotkey, TargetNullValue='Click to set'}"
                                     FontFamily="Cascadia Mono" FontSize="12"
-                                    IsReadOnly="True" Width="160" />
+                                    IsReadOnly="True" Width="160"
+                                    GotFocus="HotkeyTextBox_GotFocus"
+                                    LostFocus="HotkeyTextBox_LostFocus"
+                                    PreviewKeyDown="HotkeyTextBox_PreviewKeyDown" />
                     </StackPanel>
                     <StackPanel>
                         <TextBlock Text="Cycle hotkey" FontWeight="SemiBold" />
