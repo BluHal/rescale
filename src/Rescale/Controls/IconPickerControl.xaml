@@ -1,0 +1,44 @@
+<UserControl x:Class="Rescale.Controls.IconPickerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+
+    <Border Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="12"
+            Width="320">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="16" Opacity="0.18" ShadowDepth="8" />
+        </Border.Effect>
+        <StackPanel>
+            <DockPanel Margin="0,0,0,10">
+                <ui:Button DockPanel.Dock="Right"
+                           Icon="{ui:SymbolIcon Dismiss24}"
+                           Appearance="Secondary"
+                           Click="CloseButton_Click"
+                           Width="28" Height="28" Padding="0" />
+                <TextBlock Text="Choose an icon" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </DockPanel>
+
+            <!-- Activity -->
+            <TextBlock Text="ACTIVITY" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                       Margin="0,0,0,6" />
+            <WrapPanel x:Name="ActivityPanel" Margin="0,0,0,12" />
+
+            <!-- General -->
+            <TextBlock Text="GENERAL" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                       Margin="0,0,0,6" />
+            <WrapPanel x:Name="GeneralPanel" Margin="0,0,0,12" />
+
+            <!-- Symbols -->
+            <TextBlock Text="SYMBOLS" FontSize="10" FontWeight="SemiBold"
+                       Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                       Margin="0,0,0,6" />
+            <WrapPanel x:Name="SymbolsPanel" />
+        </StackPanel>
+    </Border>
+</UserControl>

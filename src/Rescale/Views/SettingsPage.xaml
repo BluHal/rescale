@@ -1,0 +1,96 @@
+<Page x:Class="Rescale.Views.SettingsPage"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+           xmlns:vm="clr-namespace:Rescale.ViewModels"
+           d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+           mc:Ignorable="d"
+>
+
+    <StackPanel Margin="36,28,36,24" MaxWidth="720">
+
+        <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" Margin="0,0,0,4" />
+        <TextBlock Text="Theme, startup, and global shortcuts."
+                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                   FontSize="12" Margin="0,0,0,24" />
+
+        <!-- Appearance -->
+        <TextBlock Text="Appearance" FontWeight="SemiBold" Margin="4,0,0,8" />
+        <ui:Card Padding="0" Margin="0,0,0,20">
+            <StackPanel>
+                <DockPanel Margin="16,14">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <ui:Button Content="System"
+                                   Appearance="{Binding Theme, Converter={StaticResource ThemeButtonAppearanceConverter}, ConverterParameter=System}"
+                                   Command="{Binding SetThemeCommand}" CommandParameter="System"
+                                   Margin="0,0,4,0" />
+                        <ui:Button Content="Light"
+                                   Appearance="{Binding Theme, Converter={StaticResource ThemeButtonAppearanceConverter}, ConverterParameter=Light}"
+                                   Command="{Binding SetThemeCommand}" CommandParameter="Light"
+                                   Margin="0,0,4,0" />
+                        <ui:Button Content="Dark"
+                                   Appearance="{Binding Theme, Converter={StaticResource ThemeButtonAppearanceConverter}, ConverterParameter=Dark}"
+                                   Command="{Binding SetThemeCommand}" CommandParameter="Dark" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="App theme" FontWeight="SemiBold" />
+                        <TextBlock Text="Choose Light, Dark, or follow the system theme."
+                                   FontSize="12"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </DockPanel>
+            </StackPanel>
+        </ui:Card>
+
+        <!-- Startup & cycling -->
+        <TextBlock Text="Startup &amp; cycling" FontWeight="SemiBold" Margin="4,0,0,8" />
+        <ui:Card Padding="0" Margin="0,0,0,20">
+            <StackPanel>
+                <DockPanel Margin="16,14">
+                    <ui:ToggleSwitch DockPanel.Dock="Right" IsChecked="{Binding AutoStart}" />
+                    <StackPanel>
+                        <TextBlock Text="Start with Windows" FontWeight="SemiBold" />
+                        <TextBlock Text="Launch Rescale into the tray on sign-in."
+                                   FontSize="12"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </DockPanel>
+
+                <Border Height="1" Background="{ui:ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                <DockPanel Margin="16,14">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:TextBox Text="{Binding CycleHotkey, TargetNullValue='Not set'}"
+                                    FontFamily="Cascadia Mono" FontSize="12"
+                                    IsReadOnly="True" Width="160" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Cycle hotkey" FontWeight="SemiBold" />
+                        <TextBlock Text="Global shortcut equivalent to a left-click on the tray icon."
+                                   FontSize="12"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </DockPanel>
+            </StackPanel>
+        </ui:Card>
+
+        <!-- About -->
+        <TextBlock Text="About" FontWeight="SemiBold" Margin="4,0,0,8" />
+        <ui:Card Padding="0" Margin="0,0,0,20">
+            <DockPanel Margin="16,14">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:HyperlinkButton Content="Repository"
+                                         NavigateUri="https://github.com/BluHal/rescale" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Rescale 0.1.0" FontWeight="SemiBold" />
+                    <TextBlock Text="Windows tray utility for cycling display presets."
+                               FontSize="12"
+                               Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </DockPanel>
+        </ui:Card>
+    </StackPanel>
+</Page>

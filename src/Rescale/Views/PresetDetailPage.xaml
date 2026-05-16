@@ -1,0 +1,202 @@
+<Page x:Class="Rescale.Views.PresetDetailPage"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+           xmlns:controls="clr-namespace:Rescale.Controls"
+           xmlns:vm="clr-namespace:Rescale.ViewModels"
+           d:DataContext="{d:DesignInstance Type=vm:PresetDetailViewModel}"
+           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+           mc:Ignorable="d"
+>
+
+    <Grid Margin="36,28,36,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Breadcrumb -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <ui:Button Content="Duplicate"
+                           Icon="{ui:SymbolIcon Copy24}"
+                           Appearance="Secondary"
+                           Command="{Binding DuplicateCommand}"
+                           Margin="0,0,6,0" />
+                <ui:Button Content="Delete"
+                           Icon="{ui:SymbolIcon Delete24}"
+                           Appearance="Danger"
+                           Command="{Binding DeleteCommand}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:Button Content="Presets"
+                           Icon="{ui:SymbolIcon ChevronLeft24}"
+                           Appearance="Secondary"
+                           Command="{Binding GoBackCommand}" />
+                <TextBlock Text="/" Margin="8,0"
+                           Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <ui:Badge Margin="8,0,0,0" Appearance="Success"
+                          Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="Currently applied" FontSize="11" />
+                </ui:Badge>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Header: icon + name + hotkey + favorite -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Width="80" Height="80" CornerRadius="16"
+                    Background="{ui:ThemeResource ControlFillColorDefaultBrush}"
+                    Cursor="Hand" Margin="0,0,16,0"
+                    MouseLeftButtonDown="IconTile_Click">
+                <ui:SymbolIcon Symbol="Desktop24" FontSize="40"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <ui:TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            FontSize="28" FontWeight="SemiBold"
+                            PlaceholderText="Preset name"
+                            Margin="0,0,0,8" />
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Margin="0,0,24,0">
+                        <TextBlock Text="Direct hotkey" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                   Margin="0,0,0,4" />
+                        <ui:TextBox Text="{Binding Hotkey, TargetNullValue='Not set'}"
+                                    FontFamily="Cascadia Mono" FontSize="12"
+                                    IsReadOnly="True" Width="160" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="In tray cycle" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                   Margin="0,0,0,4" />
+                        <ui:ToggleSwitch IsChecked="{Binding IsFavorite}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <!-- Display arrangement -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,16">
+            <DockPanel Margin="0,0,0,8">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <ui:Button Content="Detect"
+                               Icon="{ui:SymbolIcon ArrowSync24}"
+                               Appearance="Secondary"
+                               Command="{Binding DetectMonitorsCommand}"
+                               Margin="0,0,6,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Display arrangement" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <ui:Badge Margin="8,0,0,0" Appearance="Info">
+                        <TextBlock FontSize="11">
+                            <Run Text="{Binding Monitors.Count, Mode=OneWay}" />
+                            <Run Text=" monitors" />
+                        </TextBlock>
+                    </ui:Badge>
+                </StackPanel>
+            </DockPanel>
+
+            <controls:MonitorLayoutControl Monitors="{Binding Monitors}"
+                                            SelectedIndex="{Binding SelectedMonitorIndex, Mode=TwoWay}"
+                                            ConnectedDevicePaths="{Binding ConnectedDevicePaths}"
+                                            Height="180" />
+            <TextBlock Text="Click a display to configure"
+                       FontSize="12" Margin="0,6,0,0"
+                       Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}" />
+        </StackPanel>
+
+        <!-- Per-monitor editor -->
+        <ui:Card Grid.Row="3" Padding="18" Margin="0,0,0,16"
+                 Visibility="{Binding SelectedMonitor, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,14">
+                    <ui:Badge DockPanel.Dock="Right" Appearance="Info">
+                        <TextBlock Text="EDID" FontSize="11" />
+                    </ui:Badge>
+                    <StackPanel>
+                        <TextBlock FontSize="11" FontWeight="SemiBold"
+                                   Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                                   Text="{Binding SelectedMonitor.DevicePath}" />
+                        <TextBlock Text="{Binding SelectedMonitor.EdidModel, FallbackValue='Monitor'}"
+                                   FontSize="18" FontWeight="SemiBold" />
+                    </StackPanel>
+                </DockPanel>
+
+                <StackPanel Margin="0,0,0,14">
+                    <TextBlock Text="Resolution" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                               Margin="0,0,0,6" />
+                    <ui:TextBox IsReadOnly="True" FontFamily="Cascadia Mono">
+                        <ui:TextBox.Text>
+                            <MultiBinding StringFormat="{}{0} x {1}">
+                                <Binding Path="SelectedMonitor.Width" />
+                                <Binding Path="SelectedMonitor.Height" />
+                            </MultiBinding>
+                        </ui:TextBox.Text>
+                    </ui:TextBox>
+                </StackPanel>
+
+                <ui:InfoBar Title="Custom resolution"
+                            Message="This resolution is not listed by the display driver and may not work."
+                            Severity="Caution" IsOpen="{Binding SelectedMonitor.IsCustomResolution, FallbackValue=False}"
+                            IsClosable="False" Margin="0,0,0,14" />
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="200" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock Text="Refresh rate" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                   Margin="0,0,0,6" />
+                        <ui:TextBox IsReadOnly="True" FontFamily="Cascadia Mono">
+                            <ui:TextBox.Text>
+                                <Binding Path="SelectedMonitor.RefreshRate" StringFormat="{}{0} Hz" />
+                            </ui:TextBox.Text>
+                        </ui:TextBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="HDR" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                   Margin="0,0,0,6" />
+                        <ui:ToggleSwitch IsChecked="{Binding SelectedMonitor.HdrEnabled}" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ui:Card>
+
+        <!-- Sticky footer -->
+        <DockPanel Grid.Row="5" Margin="0,14,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <ui:Button Content="Save"
+                           Icon="{ui:SymbolIcon Save24}"
+                           Command="{Binding SaveCommand}"
+                           Margin="0,0,8,0" />
+                <ui:Button Content="Save &amp; apply now"
+                           Icon="{ui:SymbolIcon Checkmark24}"
+                           Appearance="Primary"
+                           Command="{Binding SaveAndApplyCommand}" />
+            </StackPanel>
+            <TextBlock Text="Auto-rollback on failure"
+                       FontSize="12"
+                       Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
+    </Grid>
+</Page>
