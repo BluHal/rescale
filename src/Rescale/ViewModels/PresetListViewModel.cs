@@ -56,28 +56,49 @@ public partial class PresetListViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenPreset(Preset preset) => PresetSelected?.Invoke(preset);
+    private void OpenPreset(Preset preset)
+    {
+        Services.LogService.Info($"OpenPreset command: {preset.Name} (Id={preset.Id})");
+        PresetSelected?.Invoke(preset);
+    }
 
     [RelayCommand]
     private void CaptureNewPreset()
     {
-        var preset = _presetService.CaptureCurrentAsPreset("New preset");
-        Refresh();
-        PresetCreated?.Invoke(preset);
+        try
+        {
+            Services.LogService.Info("CaptureNewPreset");
+            var preset = _presetService.CaptureCurrentAsPreset("New preset");
+            Refresh();
+            PresetCreated?.Invoke(preset);
+        }
+        catch (Exception ex)
+        {
+            Services.LogService.Error("CaptureNewPreset failed", ex);
+        }
     }
 
     [RelayCommand]
     private void CreateEmptyPreset()
     {
-        var config = _configService.Load();
-        var preset = new Preset
+        try
         {
-            Name = "New preset",
-            Order = config.Presets.Count(p => p.IsFavorite),
-        };
-        config.Presets.Add(preset);
-        _configService.Save(config);
-        Refresh();
-        PresetCreated?.Invoke(preset);
+            Services.LogService.Info("CreateEmptyPreset");
+            var config = _configService.Load();
+            var preset = new Preset
+            {
+                Name = "New preset",
+                Order = config.Presets.Count(p => p.IsFavorite),
+            };
+            config.Presets.Add(preset);
+            _configService.Save(config);
+            Refresh();
+            Services.LogService.Info($"Empty preset created: {preset.Id}");
+            PresetCreated?.Invoke(preset);
+        }
+        catch (Exception ex)
+        {
+            Services.LogService.Error("CreateEmptyPreset failed", ex);
+        }
     }
 }

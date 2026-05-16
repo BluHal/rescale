@@ -59,6 +59,11 @@ public sealed class DisplayService
             var dm = CreateDevMode();
             NativeMethods.EnumDisplaySettings(gdiName, ENUM_CURRENT_SETTINGS, ref dm);
 
+            var ccdRefreshRate = paths[i].TargetInfo.RefreshRate;
+            int refreshHz = ccdRefreshRate.Denominator > 0
+                ? (int)Math.Round((double)ccdRefreshRate.Numerator / ccdRefreshRate.Denominator)
+                : (int)dm.DisplayFrequency;
+
             result.Add(new MonitorInfo
             {
                 FriendlyName = string.IsNullOrEmpty(friendlyName) ? gdiName : friendlyName,
@@ -69,7 +74,7 @@ public sealed class DisplayService
                 SourceId = paths[i].SourceInfo.Id,
                 CurrentWidth = (int)dm.PelsWidth,
                 CurrentHeight = (int)dm.PelsHeight,
-                CurrentRefreshRate = (int)dm.DisplayFrequency,
+                CurrentRefreshRate = refreshHz,
                 PositionX = dm.PositionX,
                 PositionY = dm.PositionY,
             });
@@ -84,7 +89,9 @@ public sealed class DisplayService
         var modes = new List<DisplayMode>();
         var dm = CreateDevMode();
 
-        for (int i = 0; NativeMethods.EnumDisplaySettings(gdiDeviceName, i, ref dm); i++)
+        LogService.Info($"Enumerating modes for {gdiDeviceName}");
+
+        for (int i = 0; NativeMethods.EnumDisplaySettingsEx(gdiDeviceName, i, ref dm, EDS_RAWMODE); i++)
         {
             modes.Add(new DisplayMode
             {
@@ -92,6 +99,72 @@ public sealed class DisplayService
                 Height = (int)dm.PelsHeight,
                 RefreshRate = (int)dm.DisplayFrequency,
             });
+        }
+
+        var unique = modes
+            .DistinctBy(m => (m.Width, m.Height, m.RefreshRate))
+            .OrderByDescending(m => m.Width * m.Height)
+            .ThenByDescending(m => m.RefreshRate)
+            .ToList();
+
+        var nativeRes = unique.Where(m => m.Width == 3840 && m.Height == 1600).ToList();
+        LogService.Info($"Total raw modes: {modes.Count}, unique: {unique.Count}");
+        LogService.Info($"3840x1600 refresh rates: {string.Join(", ", nativeRes.Select(m => m.RefreshRate))}");
+
+        var allRefreshRates = unique.Select(m => m.RefreshRate).Distinct().OrderByDescending(r => r).ToList();
+        LogService.Info($"All refresh rates across all res: {string.Join(", ", allRefreshRates)}");
+
+        return unique;
+    }
+
+    /// <summary>Enumerates modes via CCD API paths for high refresh rate support.</summary>
+    public List<DisplayMode> GetSupportedModesCcd(LUID adapterId, uint targetId, string gdiDeviceName)
+    {
+        var modes = GetSupportedModes(gdiDeviceName);
+
+        if (NativeMethods.GetDisplayConfigBufferSizes(QDC_ALL_PATHS, out var pathCount, out var modeCount) != 0)
+            return modes;
+
+        var paths = new DISPLAYCONFIG_PATH_INFO[pathCount];
+        var ccdModes = new DISPLAYCONFIG_MODE_INFO[modeCount];
+
+        if (NativeMethods.QueryDisplayConfig(QDC_ALL_PATHS, ref pathCount, paths, ref modeCount, ccdModes, 0) != 0)
+            return modes;
+
+        var ccdRefreshRates = new HashSet<int>();
+        for (int i = 0; i < pathCount; i++)
+        {
+            if (paths[i].TargetInfo.AdapterId.LowPart == adapterId.LowPart &&
+                paths[i].TargetInfo.AdapterId.HighPart == adapterId.HighPart &&
+                paths[i].TargetInfo.Id == targetId)
+            {
+                var r = paths[i].TargetInfo.RefreshRate;
+                if (r.Denominator > 0)
+                {
+                    int hz = (int)Math.Round((double)r.Numerator / r.Denominator);
+                    if (hz > 0)
+                        ccdRefreshRates.Add(hz);
+                }
+            }
+        }
+
+        LogService.Info($"CCD refresh rates for target {targetId}: {string.Join(", ", ccdRefreshRates.OrderByDescending(r => r))}");
+
+        var nativeRes = modes.Where(m => m.Width == 3840 && m.Height == 1600).ToList();
+        var existingRates = nativeRes.Select(m => m.RefreshRate).ToHashSet();
+
+        foreach (var hz in ccdRefreshRates)
+        {
+            if (!existingRates.Contains(hz) && nativeRes.Count > 0)
+            {
+                modes.Add(new DisplayMode
+                {
+                    Width = nativeRes[0].Width,
+                    Height = nativeRes[0].Height,
+                    RefreshRate = hz,
+                });
+                LogService.Info($"Added CCD-only mode: {nativeRes[0].Width}x{nativeRes[0].Height}@{hz}Hz");
+            }
         }
 
         return modes

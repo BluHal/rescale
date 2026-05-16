@@ -52,19 +52,31 @@ public partial class MainViewModel : ObservableObject
 
     private void OnPresetSelected(Preset preset)
     {
-        PresetDetailVm = new PresetDetailViewModel(
-            preset, Config, _presetService, _displayService, _configService);
-        PresetDetailVm.BackRequested += OnDetailBack;
-        IsDetailView = true;
+        try
+        {
+            Services.LogService.Info($"OnPresetSelected: {preset.Name} (Id={preset.Id})");
+            IsDetailView = false;
+            PresetDetailVm = new PresetDetailViewModel(
+                preset, Config, _presetService, _displayService, _configService);
+            PresetDetailVm.BackRequested += OnDetailBack;
+            Services.LogService.Info("PresetDetailVm created, setting IsDetailView=true");
+            IsDetailView = true;
+        }
+        catch (Exception ex)
+        {
+            Services.LogService.Error("OnPresetSelected failed", ex);
+        }
     }
 
     private void OnPresetCreated(Preset preset)
     {
+        Services.LogService.Info($"OnPresetCreated: {preset.Name} (Id={preset.Id})");
         OnPresetSelected(preset);
     }
 
     private void OnDetailBack()
     {
+        Services.LogService.Info("OnDetailBack");
         IsDetailView = false;
         PresetDetailVm = null;
         PresetListVm.Refresh();

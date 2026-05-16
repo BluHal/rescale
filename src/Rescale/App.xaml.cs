@@ -20,6 +20,18 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        DispatcherUnhandledException += (_, args) =>
+        {
+            LogService.Error("Unhandled UI exception", args.Exception);
+            args.Handled = true;
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            LogService.Error("Unhandled domain exception", args.ExceptionObject as Exception);
+        };
+
+        LogService.Info("App starting");
+
         var presetService = new PresetService(
             _displayService, _resolutionService, _hdrService, _monitorIdentifier, _configService);
 

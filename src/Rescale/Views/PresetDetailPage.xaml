@@ -8,6 +8,7 @@
            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
            mc:Ignorable="d"
+           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
 >
 
     <Grid Margin="36,28,36,24">
@@ -122,62 +123,56 @@
         <ui:Card Grid.Row="3" Padding="18" Margin="0,0,0,16"
                  Visibility="{Binding SelectedMonitor, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}">
             <StackPanel>
-                <DockPanel Margin="0,0,0,14">
-                    <ui:Badge DockPanel.Dock="Right" Appearance="Info">
-                        <TextBlock Text="EDID" FontSize="11" />
-                    </ui:Badge>
-                    <StackPanel>
-                        <TextBlock FontSize="11" FontWeight="SemiBold"
-                                   Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
-                                   Text="{Binding SelectedMonitor.DevicePath}" />
-                        <TextBlock Text="{Binding SelectedMonitor.EdidModel, FallbackValue='Monitor'}"
-                                   FontSize="18" FontWeight="SemiBold" />
-                    </StackPanel>
-                </DockPanel>
-
-                <StackPanel Margin="0,0,0,14">
-                    <TextBlock Text="Resolution" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                               Margin="0,0,0,6" />
-                    <ui:TextBox IsReadOnly="True" FontFamily="Cascadia Mono">
-                        <ui:TextBox.Text>
-                            <MultiBinding StringFormat="{}{0} x {1}">
-                                <Binding Path="SelectedMonitor.Width" />
-                                <Binding Path="SelectedMonitor.Height" />
-                            </MultiBinding>
-                        </ui:TextBox.Text>
-                    </ui:TextBox>
-                </StackPanel>
-
-                <ui:InfoBar Title="Custom resolution"
-                            Message="This resolution is not listed by the display driver and may not work."
-                            Severity="Caution" IsOpen="{Binding SelectedMonitor.IsCustomResolution, FallbackValue=False}"
-                            IsClosable="False" Margin="0,0,0,14" />
-
-                <Grid>
+                <Grid Margin="0,0,0,14">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                        <TextBlock Text="Resolution" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                   Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding AvailableResolutions}"
+                                  SelectedItem="{Binding SelectedResolution}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding Width, Mode=OneWay}" />
+                                        <Run Text=" x " />
+                                        <Run Text="{Binding Height, Mode=OneWay}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="6,0,0,0">
                         <TextBlock Text="Refresh rate" FontSize="12" FontWeight="SemiBold"
                                    Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                    Margin="0,0,0,6" />
-                        <ui:TextBox IsReadOnly="True" FontFamily="Cascadia Mono">
-                            <ui:TextBox.Text>
-                                <Binding Path="SelectedMonitor.RefreshRate" StringFormat="{}{0} Hz" />
-                            </ui:TextBox.Text>
-                        </ui:TextBox>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="HDR" FontSize="12" FontWeight="SemiBold"
-                                   Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                   Margin="0,0,0,6" />
-                        <ui:ToggleSwitch IsChecked="{Binding SelectedMonitor.HdrEnabled}" />
+                        <ComboBox ItemsSource="{Binding AvailableRefreshRates}"
+                                  SelectedItem="{Binding SelectedRefreshRate}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding StringFormat='{}{0} Hz'}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
                 </Grid>
+
+                <ui:InfoBar Title="Custom resolution"
+                            Message="This resolution is not listed by the display driver and may not work."
+                            Severity="Warning" IsOpen="{Binding SelectedMonitor.IsCustomResolution, FallbackValue=False}"
+                            IsClosable="False" Margin="0,0,0,14" />
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="HDR" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                               Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <ui:ToggleSwitch IsChecked="{Binding SelectedMonitor.HdrEnabled}" />
+                </StackPanel>
             </StackPanel>
         </ui:Card>
 

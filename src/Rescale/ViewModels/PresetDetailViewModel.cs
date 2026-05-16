@@ -45,7 +45,13 @@ public partial class PresetDetailViewModel : ObservableObject
     private ObservableCollection<DisplayMode> _availableResolutions = [];
 
     [ObservableProperty]
+    private DisplayMode? _selectedResolution;
+
+    [ObservableProperty]
     private ObservableCollection<int> _availableRefreshRates = [];
+
+    [ObservableProperty]
+    private int _selectedRefreshRate;
 
     [ObservableProperty]
     private bool _isActive;
@@ -81,6 +87,7 @@ public partial class PresetDetailViewModel : ObservableObject
         {
             SelectedMonitorIndex = 0;
             SelectedMonitor = _monitors[0];
+            LoadAvailableModesForMonitor();
         }
     }
 
@@ -93,6 +100,22 @@ public partial class PresetDetailViewModel : ObservableObject
         }
     }
 
+    partial void OnSelectedResolutionChanged(DisplayMode? value)
+    {
+        if (value == null || SelectedMonitor == null) return;
+        SelectedMonitor.Width = value.Width;
+        SelectedMonitor.Height = value.Height;
+        RefreshAvailableRefreshRates();
+    }
+
+    partial void OnSelectedRefreshRateChanged(int value)
+    {
+        if (SelectedMonitor == null || value == 0) return;
+        SelectedMonitor.RefreshRate = value;
+    }
+
+    private List<DisplayMode> _allModes = [];
+
     private void LoadAvailableModesForMonitor()
     {
         if (SelectedMonitor == null) return;
@@ -103,17 +126,32 @@ public partial class PresetDetailViewModel : ObservableObject
 
         if (match == null) return;
 
-        var modes = _displayService.GetSupportedModes(match.GdiDeviceName);
+        _allModes = _displayService.GetSupportedModesCcd(match.AdapterId, match.TargetId, match.GdiDeviceName);
         AvailableResolutions = new ObservableCollection<DisplayMode>(
-            modes.DistinctBy(m => (m.Width, m.Height)).ToList());
+            _allModes.DistinctBy(m => (m.Width, m.Height))
+                     .OrderByDescending(m => m.Width * m.Height)
+                     .ToList());
 
-        var refreshRates = modes
+        SelectedResolution = AvailableResolutions.FirstOrDefault(
+            r => r.Width == SelectedMonitor.Width && r.Height == SelectedMonitor.Height);
+
+        RefreshAvailableRefreshRates();
+    }
+
+    private void RefreshAvailableRefreshRates()
+    {
+        if (SelectedMonitor == null) return;
+
+        var refreshRates = _allModes
             .Where(m => m.Width == SelectedMonitor.Width && m.Height == SelectedMonitor.Height)
             .Select(m => m.RefreshRate)
             .Distinct()
             .OrderByDescending(r => r)
             .ToList();
         AvailableRefreshRates = new ObservableCollection<int>(refreshRates);
+        SelectedRefreshRate = AvailableRefreshRates.Contains(SelectedMonitor.RefreshRate)
+            ? SelectedMonitor.RefreshRate
+            : AvailableRefreshRates.FirstOrDefault();
     }
 
     private void RefreshConnectedMonitors()
@@ -206,6 +244,7 @@ public partial class PresetDetailViewModel : ObservableObject
         {
             SelectedMonitorIndex = 0;
             SelectedMonitor = Monitors[0];
+            LoadAvailableModesForMonitor();
         }
     }
 }

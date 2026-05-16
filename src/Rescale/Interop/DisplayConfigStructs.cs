@@ -11,7 +11,7 @@ public struct LUID
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct DISPLAYCONFIG_RATIONAL
+public struct DISPLAYCONFIG_RATIONAL
 {
     public uint Numerator;
     public uint Denominator;
@@ -165,6 +165,7 @@ internal struct DEVMODE
 internal static class DisplayConfigConstants
 {
     public const int QDC_ONLY_ACTIVE_PATHS = 0x00000002;
+    public const int QDC_ALL_PATHS = 0x00000001;
     public const int MODE_INFO_TYPE_SOURCE = 1;
     public const int MODE_INFO_TYPE_TARGET = 2;
 
@@ -184,6 +185,7 @@ internal static class DisplayConfigConstants
     public const uint DM_POSITION = 0x00000020;
 
     public const int ENUM_CURRENT_SETTINGS = -1;
+    public const uint EDS_RAWMODE = 0x00000002;
     public const int CDS_UPDATEREGISTRY = 0x00000001;
     public const int DISP_CHANGE_SUCCESSFUL = 0;
     public const int DISP_CHANGE_BADMODE = -2;

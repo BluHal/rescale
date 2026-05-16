@@ -3,6 +3,7 @@
            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
            xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
            xmlns:vm="clr-namespace:Rescale.ViewModels"
+           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
 >
 
     <Grid Margin="36,28,36,24">

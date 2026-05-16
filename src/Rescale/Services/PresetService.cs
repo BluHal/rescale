@@ -18,6 +18,8 @@ public sealed class PresetService(
         var activeMonitors = displayService.GetActiveMonitors();
         var missing = new List<string>();
 
+        var hdrActions = new List<Action>();
+
         foreach (var monConfig in preset.Monitors)
         {
             var match = monitorIdentifier.FindMatch(monConfig, activeMonitors);
@@ -27,9 +29,18 @@ public sealed class PresetService(
                 continue;
             }
 
-            resolutionService.SetResolution(match.GdiDeviceName, monConfig.Width, monConfig.Height, monConfig.RefreshRate);
+            resolutionService.SetResolution(match.AdapterId, match.TargetId, match.GdiDeviceName, monConfig.Width, monConfig.Height, monConfig.RefreshRate);
 
-            hdrService.SetHdr(match.AdapterId, match.TargetId, monConfig.HdrEnabled);
+            var m = match;
+            var hdrEnabled = monConfig.HdrEnabled;
+            hdrActions.Add(() => hdrService.SetHdr(m.AdapterId, m.TargetId, hdrEnabled));
+        }
+
+        if (hdrActions.Count > 0)
+        {
+            Thread.Sleep(500);
+            foreach (var action in hdrActions)
+                action();
         }
 
         var config = configService.Load();

@@ -24,14 +24,18 @@ public sealed class TrayService : IDisposable
     /// <summary>Creates and shows the tray icon with its context menu.</summary>
     public void Initialize()
     {
-        _trayIcon = new TaskbarIcon
-        {
-            ToolTipText = BuildTooltip(),
-            Icon = RenderTrayIcon("R"),
-            ContextMenu = BuildContextMenu(),
-        };
-
+        _trayIcon = new TaskbarIcon();
+        _trayIcon.ForceCreate();
+        _trayIcon.ToolTipText = BuildTooltip();
+        _trayIcon.Icon = LoadAppIcon() ?? RenderTrayIcon("R");
+        _trayIcon.ContextMenu = BuildContextMenu();
         _trayIcon.TrayLeftMouseDown += OnLeftClick;
+    }
+
+    private static Icon? LoadAppIcon()
+    {
+        var exePath = Environment.ProcessPath;
+        return exePath != null ? Icon.ExtractAssociatedIcon(exePath) : null;
     }
 
     private void OnLeftClick(object? sender, RoutedEventArgs e)

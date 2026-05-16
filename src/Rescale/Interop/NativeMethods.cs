@@ -44,6 +44,10 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool EnumDisplaySettings(string? deviceName, int modeNum, ref DEVMODE devMode);
 
+    [DllImport("user32.dll", EntryPoint = "EnumDisplaySettingsExW", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool EnumDisplaySettingsEx(string? deviceName, int modeNum, ref DEVMODE devMode, uint flags);
+
     [DllImport("user32.dll", EntryPoint = "ChangeDisplaySettingsExW", CharSet = CharSet.Unicode)]
     internal static extern int ChangeDisplaySettingsEx(
         string? deviceName,
